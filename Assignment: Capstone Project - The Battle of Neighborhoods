@@ -1,0 +1,283 @@
+
+Capstone Project - Battle of Neighbourhoods ( Part -1)
+Introduction/Business Problem:
+What is the impact of the Socio economic factors to Crime rates in different suburbs in London?
+
+I have been a resident of London for the last 16 years. Over a period of time, I have been watching the socio economic changes happening in London and also observing the increasing crime rates in different suburbs in London. I undertake the opportunity to analyse how the fluctuation in socio economic factors affect the crime rates in different suburbs in London.
+
+London is a densily populated city with 8.85 million people in 2018. It is an ever growing city and as per the Office for National Statistics (ONS)London could on average grow by some 117,000 pa to 9.37 mll in 2021. As expected, this has an impact on socio economic landscape with increasing pressure on Government to ingest funds to maintain the quality of life in London. With the confusions over the Brexit looming over the future of UK, and funding cuts affecting the Police, NHS and local government initiatives including the social care, it has become challenging for many boroughs to control the crime rates down.
+
+There are 33 boroughs in London each of which have different characteristics and governance. They are categorised as inner boroughs and outer boroughs. This analysis is based on the socio economic changes occured in these 33 bouroughs in the last decade and its impact on the crime rates in those aeas.
+
+The factors considered are as follows:
+
+Population density and degree of urbanization
+
+Housing
+
+Affordability
+Number of Homeless people
+People on housing benefits
+Poverty
+Number of People of Benefits
+Number of people below poverty line
+Social Care
+School Funding
+Parks
+Recreational facilities
+Family conditions with respect to divorce and family cohesiveness.
+Lone families
+Unempleyment
+Number of unemployed people
+Number of people not employable
+Effective strength of law enforcement agencies.
+Reduction in Police Community Support Officers (PCSO)
+Education
+Performance of the schools
+Dropouts
+People are not pursuing to further education after school
+NHS (National Health Service) - Medical facilities and the financial challenges
+Average waiting time
+Operations cancelled
+Youth service budget cuts and closures
+Number of units closed
+Variations in composition of the population, particularly youth concentration.
+Counts on the different ethinicity of the population
+Stability of the population with respect to residents’ mobility, commuting patterns, and transient factors.
+Modes of transportation and highway system.
+Connectivity to railways and highwayes
+Cultural factors and educational, recreational, and religious characteristics.
+Number of recreational facilities
+Administrative and investigative emphases of law enforcement.
+Citizens’ attitudes toward crime.
+Crime reporting practices of the citizenry
+Capstone Project - Battle of Neighbourhoods ( Part -2)
+Details of Data:
+The data for analysing the issue - 'What is the impact of the Socio economic factors to Crime rates in different suburbs in London?' is mainly coming from the following sources.
+
+https://data.london.gov.uk
+https://www.trustforlondon.org.uk/data/
+https://www.ons.gov.uk
+https://www.met.police.uk
+https://www.gmblondon.org.uk
+https://en.wikipedia.org
+The map coordinate data are taken from
+
+https://foursquare.com
+The factors considered are as follows:
+
+The major data sets used for the analysis are as follows:
+
+List of London Boroughs
+In [68]:
+# Source : https://data.london.gov.uk/dataset/london-borough-profiles
+import pandas as pd
+import numpy as np
+import requests
+from bs4 import BeautifulSoup
+
+df = pd.read_excel('./Downloads/notebook/london-borough-profiles.xlsx', sheet_name='Data', skiprows=0)
+df.dropna(subset=['Inner/ Outer London'], inplace=True)
+
+df= df[['New code','Area name', 'Inner/ Outer London']]
+df.rename(columns={'New code': 'ONS_Code', 'Area name': 'Borough','Inner/ Outer London':'Inner_Outer' }, inplace =True)
+df.head()
+Out[68]:
+ONS_Code	Borough	Inner_Outer
+1	E09000001	City of London	Inner London
+2	E09000002	Barking and Dagenham	Outer London
+3	E09000003	Barnet	Outer London
+4	E09000004	Bexley	Outer London
+5	E09000005	Brent	Outer London
+Population Density in London Boroughs
+In [71]:
+# https://data.london.gov.uk/dataset/land-area-and-population-density-ward-and-borough
+
+df_pop = pd.read_excel('./Downloads/notebook/land-area-population-density-london.xls', sheet_name='Borough',skiprows =1,  index_col=None, na_values=['NA'], usecols = "A,A:L", nrows= 34)
+df_pop.dropna(subset=['Area name'], inplace=True)
+df_pop.head()
+Out[71]:
+Code	Area name	Inner/ Outer London	GLA Population estimate/ projection	Inland Area (Hectares)	Total Area (Hectares)	Population per hectare	Square Kilometres	Population per square kilometre	Unnamed: 9	Census population (2011)	Population per hectare.1
+1	E09000001	City of London	Inner	7681.0	290.3934	314.9383	26.450326	2.903934	2645.032566	NaN	7400.0	25.482673
+2	E09000002	Barking and Dagenham	Outer	212773.0	3610.7817	3779.9330	58.927129	36.107817	5892.712927	NaN	185900.0	51.484697
+3	E09000003	Barnet	Outer	397049.0	8674.8314	8674.8314	45.770227	86.748314	4577.022673	NaN	356400.0	41.084372
+4	E09000004	Bexley	Outer	249999.0	6058.0668	6428.5879	41.267125	60.580668	4126.712502	NaN	232000.0	38.296045
+5	E09000005	Brent	Outer	336859.0	4323.2637	4323.2637	77.917755	43.232637	7791.775459	NaN	311200.0	71.982655
+London Crime Rate History
+In [66]:
+# Import the Crime Rate History Data 
+#https://data.london.gov.uk/dataset/recorded_crime_summary
+df_crime = pd.read_csv('./Downloads/notebook/Borough_Crime_Summary.csv',delimiter=',' )
+df_crime.head()
+Out[66]:
+Borough	Major Category	Minor Category	201702	201703	201704	201705	201706	201707	201708	...	201804	201805	201806	201807	201808	201809	201810	201811	201812	201901
+0	Barking and Dagenham	Burglary	Burglary - Business and Community	47	44	32	29	19	42	30	...	36	24	33	30	18	33	32	39	33	44
+1	Barking and Dagenham	Burglary	Burglary - Residential	124	93	101	129	71	95	83	...	75	93	77	94	84	99	94	106	163	114
+2	Barking and Dagenham	Criminal Damage	Arson	5	2	13	6	14	2	5	...	3	4	12	6	5	3	8	6	1	5
+3	Barking and Dagenham	Criminal Damage	Criminal Damage To M/V	62	61	61	71	59	66	77	...	64	64	67	69	42	38	42	47	33	45
+4	Barking and Dagenham	Criminal Damage	Criminal Damage To Other Bldg	6	13	9	7	12	6	8	...	9	8	8	7	7	11	5	4	7	5
+5 rows × 27 columns
+
+Affordable Housing
+In [74]:
+# Import the Affordable housing data 
+# https://data.london.gov.uk/dataset/dclg-affordable-housing-supply-borough
+
+df_housing = pd.read_excel('./Downloads/notebook/dclg-affordable-housing-borough.xls', sheet_name='data',  index_col=None, na_values=['NA'], nrows= 34)
+df_housing.dropna(subset=['Area name'], inplace=True)
+df_housing.rename(columns={'Area name': 'Borough' }, inplace =True)
+df_housing.head()
+Out[74]:
+Former ONS code	Current ONS code	Borough	1991-92	1992-93	1993-94	1994-95	1995-96	1996-97	1997-98	...	2008-09	2009-10	2010-11	2011-12	2012-13	2013-14	2014-15	2015-16	2016-17	2017-18P
+1	00AA	E09000001	City of London	0.0	0.0	0.0	0.0	40.0	0.0	70.0	...	10.0	50.0	0.0	0.0	10.0	20.0	40.0	0.0	0.0	0.0
+2	00AB	E09000002	Barking and Dagenham	53.0	90.0	128.0	197.0	115.0	404.0	194.0	...	238.0	189.0	284.0	384.0	114.0	518.0	1200.0	318.0	59.0	320.0
+3	00AC	E09000003	Barnet	73.0	405.0	471.0	428.0	432.0	228.0	322.0	...	316.0	214.0	392.0	666.0	357.0	393.0	442.0	128.0	320.0	237.0
+4	00AD	E09000004	Bexley	129.0	159.0	372.0	135.0	122.0	172.0	195.0	...	152.0	284.0	317.0	357.0	172.0	96.0	394.0	197.0	69.0	136.0
+5	00AE	E09000005	Brent	423.0	776.0	690.0	584.0	754.0	426.0	416.0	...	648.0	557.0	703.0	852.0	530.0	277.0	1325.0	208.0	226.0	128.0
+5 rows × 30 columns
+
+Poverty Rate
+In [76]:
+# Import Poverty Data 
+# https://www.trustforlondon.org.uk/data/child-poverty-borough/
+
+df_child_poverty = pd.read_csv('./Downloads/notebook/child-poverty-rates-by-borough.csv',delimiter=',' )
+df_child_poverty.dropna(subset=['Child poverty rates by borough'], inplace=True)
+df_child_poverty.rename(columns={'Child poverty rates by borough': 'Borough', 'Unnamed: 1': 'Child_Poverty_Rate' }, inplace =True)
+df_child_poverty.head()
+Out[76]:
+Borough	Child_Poverty_Rate
+1	Richmond upon Thames	13.94%
+2	City of London	18.11%
+3	Kingston upon Thames	20.44%
+4	Sutton	20.99%
+5	Bromley	21.44%
+Outof work Benefits
+In [84]:
+# https://www.trustforlondon.org.uk/data/out-work-benefits-borough/
+df_work_benefits = pd.read_csv('./Downloads/notebook/proportion-of-working-age-population-receiving-out-of-work-benefits.csv',delimiter=',' )
+#df_work_benefits.dropna(subset=['Proportion of working-age population receiving out-of-work benefits'], inplace=True)
+df_work_benefits.rename(columns={'Proportion of working-age population receiving out-of-work benefits': 'Borough', 'Unnamed: 1': 'Work_Benefit' }, inplace =True)
+df_work_benefits.head()
+Out[84]:
+Proportion of working-age population receiving out-of-work benefits	Work_Benefit
+0	NaN	NaN
+1	Richmond upon Thames	4.30%
+2	Sutton	4.40%
+3	Kingston upon Thames	4.60%
+4	Hounslow	5.00%
+Unemployement Rates
+In [86]:
+# https://www.gmblondon.org.uk/news/16-boroughs-in-london-have-employment-rate-below-uk-average.html
+
+df_empl_rate = pd.read_excel('./Downloads/notebook/Borough_Employment_Rate.xlsx',  index_col=None, na_values=['NA'])
+df_empl_rate.head()
+Out[86]:
+Borough	Employment_Rate	Percentage
+0	Sutton	106800	82.4
+1	City of London	6800	82.1
+2	Lambeth	201700	81.9
+3	Wandsworth	185100	80.3
+4	Bromley	160600	79.0
+Police Community Support Officers (PCSO)
+In [ ]:
+#
+Education
+In [94]:
+# https://data.london.gov.uk/dataset/gcse-results-by-borough
+
+df_gcse = pd.read_excel('./Downloads/notebook/gcse-results.xls', sheet_name='2016-17',skiprows =2 , index_col=None, na_values=['NA'])
+df_gcse.dropna(subset=['Area'], inplace=True)
+df_gcse.rename(columns={'Area': 'Borough' }, inplace =True)
+df_gcse .head()
+Out[94]:
+Code	Borough	Unnamed: 2	Unnamed: 3	Unnamed: 4	Percentage of pupils entered for components	Percentage of pupils who achieved a strong 9-5 pass	Percentage of pupils who achieved a standard 9-4 pass	Unnamed: 8	Unnamed: 9	...	Percentage of pupils entered for components.1	Percentage of pupils who achieved a strong 9-5 pass.1	Percentage of pupils who achieved a standard 9-4 pass.1	Unnamed: 15	Unnamed: 16	Unnamed: 17	Unnamed: 18	Percentage of pupils entered for components.2	Percentage of pupils who achieved a strong 9-5 pass.2	Percentage of pupils who achieved a standard 9-4 pass.2
+1	E09000001	City of London	.	.	.	.	.	.	NaN	.	...	.	.	.	NaN	.	.	.	.	.	.
+2	E09000002	Barking and Dagenham	2185	46.7	0.23	97.8	43.1	63.6	NaN	1146	...	97.2	38.9	59.8	NaN	1039	50.1	0.47	98.4	47.6	67.8
+3	E09000003	Barnet	3528	54.7	0.47	96.8	60.3	77.8	NaN	1811	...	95.6	57.9	75.8	NaN	1717	57.2	0.7	98.1	62.7	80
+4	E09000004	Bexley	3141	49	-0.05	97.7	49.9	67.6	NaN	1558	...	97.8	46.1	63.3	NaN	1583	51.5	0.12	97.5	53.7	71.8
+5	E09000005	Brent	2908	49	0.49	96.8	49.8	67.4	NaN	1444	...	95.9	49.1	66.2	NaN	1464	51.1	0.66	97.7	50.5	68.6
+5 rows × 22 columns
+
+In [99]:
+# https://data.london.gov.uk/dataset/permanent-exclusions-school-borough
+
+df_perm_excl = pd.read_excel('./Downloads/notebook/permanent-exclusions-from-school.xls', sheet_name='2016-17',skiprows =1 , index_col=None, na_values=['NA'])
+df_perm_excl.dropna(subset=['Area'], inplace=True)
+df_perm_excl.rename(columns={'Area': 'Borough' }, inplace =True)
+df_perm_excl.head()
+Out[99]:
+Area Code	Borough	Number of permanent exclusions	Percentage of the school population	Number of permanent exclusions.1	Percentage of the school population.1	Number of permanent exclusions.2	Percentage of the school population.2	Number of permanent exclusions.3	Percentage of the school population.3
+1	00AA	City of London	0	0	0.0	0.00	0	0	0.0	0.00
+2	00AB	Barking and Dagenham	x	x	28.0	0.18	0	0	29.0	0.07
+3	00AC	Barnet	0	0	44.0	0.18	0	0	44.0	0.08
+4	00AD	Bexley	9	0.04	24.0	0.12	x	x	34.0	0.08
+5	00AE	Brent	3	0.01	33.0	0.17	0	0	36.0	0.07
+In [102]:
+# Income deprived households
+# http://www.intelligentlondon.org.uk/borough_insight
+
+df_dprv_hholds = pd.read_csv('./Downloads/notebook/deprived_households.csv',delimiter=',' )
+#df_dprv_hholds.dropna(subset=['Child poverty rates by borough'], inplace=True)
+df_dprv_hholds.rename(columns={'area': 'Borough' }, inplace =True)
+df_dprv_hholds.head()
+Out[102]:
+2011	Borough	Unnamed: 2	Unnamed: 3
+0	40.4	Barking and Dagenham	NaN	NaN
+1	23.2	Barnet	NaN	NaN
+2	19.7	Bexley	NaN	NaN
+3	39.3	Brent	NaN	NaN
+4	17.5	Bromley	NaN	NaN
+Health
+In [ ]:
+# https://data.london.gov.uk/dataset/london-health-inequalities-strategy-indicators
+
+df_perm_excl = pd.read_excel('./Downloads/notebook/HIS Indicators data.xlsx', sheet_name='',skiprows =1 , index_col=None, na_values=['NA'])
+df_perm_excl.dropna(subset=['Area'], inplace=True)
+df_perm_excl.rename(columns={'Area': 'Borough' }, inplace =True)
+df_perm_excl.head()
+London Youth services
+In [104]:
+# https://www.london.gov.uk/sites/default/files/london_lost_youth_services_sian_berry_jan2017.pdf
+df_funds_alloc = pd.read_excel('./Downloads/notebook/Borough_Funds_Allocation.xlsx',  index_col=None, na_values=['NA'])
+df_funds_alloc.head()
+Out[104]:
+Borough	2011/12	2016/17	Change %	change 2011/12 to 2016/17
+0	Newham	£2,107,310	£400,000	NaN	NaN
+1	Hillingdon	£4,242,000	£1,206,900	NaN	NaN
+2	Havering	£1,100,000	£350,000	NaN	NaN
+3	Barking and Dagenham	£2,286,200	£738,200	NaN	NaN
+4	Waltham Forest	£4,757,854	£1,574,000	NaN	NaN
+Family Issues
+In [107]:
+# https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/families/adhocs/009528loneparentswithdependentchildrenlondonboroughsandengland2016
+
+df_lone_par = pd.read_excel('./Downloads/notebook/loneparentswithdependentchildrenlondonboroughsandenglandtotal2016final.xls',skiprows =3 , index_col=None, na_values=['NA'])
+df_lone_par.rename(columns={'Local Authority': 'Borough' }, inplace =True)
+df_lone_par.head()
+Out[107]:
+Borough	Estimated number of lone parents
+0	Barking and Dagenham	8700
+1	Barnet	9700
+2	Bexley	7500
+3	Brent	8800
+4	Bromley	10000
+Budget Cuts
+In [ ]:
+# https://www.centreforlondon.org/reader/the-london-intelligence-issue-4/local-authority-spending/#council-budget-change-per-head
+Ethinicity concentration in boroughs
+In [110]:
+# https://data.london.gov.uk/dataset/ethnic-groups-borough
+
+df_ethn_grps = pd.read_excel('./Downloads/notebook/ethnic-groups-by-borough.xls', sheet_name='2017',skiprows =1 , index_col=None, na_values=['NA'], nrows =34)
+df_ethn_grps .dropna(subset=['Total'], inplace=True)
+df_ethn_grps .rename(columns={'Unnamed: 0': 'ONS_Num', 'Unnamed: 1': 'Borough' }, inplace =True)
+df_ethn_grps .head()
+Out[110]:
+ONS_Num	Borough	White	Asian	Black	Mixed/ Other	Total	Unnamed: 7	White.1	Asian.1	Black.1	Mixed/ Other.1	Total.1
+1	E09000001	City of London	-	-	-	-	-	NaN	-	-	-	-	-
+2	E09000002	Barking and Dagenham	104000	48000	41000	17000	210000	NaN	10000	7000	6000	4000	14000
+3	E09000003	Barnet	268000	58000	14000	50000	390000	NaN	22000	10000	6000	9000	26000
+4	E09000004	Bexley	196000	16000	27000	8000	247000	NaN	14000	4000	5000	3000	16000
+5	E09000005	Brent	124000	103000	62000	44000	332000	NaN	13000	11000	9000	7000	21000
+In [ ]:
